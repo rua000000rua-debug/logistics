@@ -14,7 +14,6 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .logo { text-align: center; color: white; margin-bottom: 30px; }
         .logo h1 { font-size: 28px; margin-bottom: 10px; }
-        .logo p { opacity: 0.9; }
         .search-card {
             background: white;
             border-radius: 16px;
@@ -30,10 +29,9 @@
             border-radius: 10px;
             font-size: 16px;
         }
-        .search-box input:focus { outline: none; border-color: #667eea; }
         .search-box button {
             padding: 14px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             border: none;
             border-radius: 10px;
@@ -95,7 +93,7 @@
     <div class="search-card">
         <div class="search-box">
             <input type="text" id="trackingInput" placeholder="请输入运单号" autocomplete="off" />
-            <button onclick="search()">查询</button>
+            <button onclick="doSearch()">查询</button>
         </div>
         <div style="font-size: 12px; color: #718096; text-align: center;">
             支持单号：PXU012605124-1 和 PXM1002605152-1
@@ -106,25 +104,7 @@
 </div>
 
 <script>
-    // 物流数据库 - 在这里添加/修改单号
-    var logisticsDatabase = {
-        "PXU012605124-1": [
-            "2026-05-28 10:01:58 【运输中】 口岸已换装",
-            "2026-05-25 10:01:54 【抵达口岸】 货物已经到达出境口岸",
-            "2026-05-18 22:02:07 【国内出运】 货物已装载完毕，已发车去出境口岸",
-            "2026-05-18 10:11:19 货物装载完毕，货物已从仓库发出",
-            "2026-05-18 09:52:48 订单已创建"
-        ],
-        "PXM1002605152-1": [
-            "2026-05-27 10:01:53 货物已换装完成",
-            "2026-05-26 10:01:40 货物抵达口岸，等待过境车换装",
-            "2026-05-19 15:02:10 货物装载完毕，货物已从仓库发出",
-            "2026-05-19 10:23:13 货物装载完毕，货物已从仓库发出",
-            "2026-05-19 10:05:46 订单已创建"
-        ]
-    };
-
-    function searchTracking() {
+    function doSearch() {
         var trackingNumber = document.getElementById('trackingInput').value.trim();
         var resultDiv = document.getElementById('result');
 
@@ -134,38 +114,51 @@
             return;
         }
 
+        var logisticsDatabase = {
+            "PXU012605124-1": [
+                "2026-05-28 10:01:58 【运输中】 口岸已换装",
+                "2026-05-25 10:01:54 【抵达口岸】 货物已经到达出境口岸",
+                "2026-05-18 22:02:07 【国内出运】 货物已装载完毕，已发车去出境口岸",
+                "2026-05-18 10:11:19 货物装载完毕，货物已从仓库发出",
+                "2026-05-18 09:52:48 订单已创建"
+            ],
+            "PXM1002605152-1": [
+                "2026-05-27 10:01:53 货物已换装完成",
+                "2026-05-26 10:01:40 货物抵达口岸，等待过境车换装",
+                "2026-05-19 15:02:10 货物装载完毕，货物已从仓库发出",
+                "2026-05-19 10:23:13 货物装载完毕，货物已从仓库发出",
+                "2026-05-19 10:05:46 订单已创建"
+            ]
+        };
+
         resultDiv.style.display = "block";
-        resultDiv.innerHTML = '<div class="loading">🔍 查询中...</div>';
+        var logistics = logisticsDatabase[trackingNumber];
 
-        setTimeout(function() {
-            var logistics = logisticsDatabase[trackingNumber];
-
-            if (logistics) {
-                var timelineHtml = '<div class="timeline">';
-                for (var i = logistics.length - 1; i >= 0; i--) {
-                    var item = logistics[i];
-                    var time = "";
-                    var content = item;
-                    var timeMatch = item.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-                    如果 (时间匹配) {
-                        时间 = timeMatch[1];
-                        内容 = item.substring(timeMatch[0].length).trim();
-                    }
-                    timelineHtml += '<div class="timeline-item"><div class="timeline-dot"></div>';
-                    if (time) timelineHtml += '<div class="timeline-date">' + time + '</div>';
-                    timelineHtml += '<div class="timeline-content">' + content + '</div></div>';
+        if (logistics) {
+            var timelineHtml = '<div class="timeline">';
+            for (var i = logistics.length - 1; i >= 0; i--) {
+                var item = logistics[i];
+                var time = "";
+                var content = item;
+                var timeMatch = item.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+                if (timeMatch) {
+                    time = timeMatch[1];
+                    content = item.substring(timeMatch[0].length).trim();
                 }
-                timelineHtml += '</div>';
-                resultDiv.innerHTML = '<div class="tracking-number">🔍 运单号：' + trackingNumber + '</div>' + timelineHtml;
-            } else {
-                resultDiv.innerHTML = '<div class="error-message">❌ 未找到运单号 ' + trackingNumber + ' 的信息</div>';
+                timelineHtml += '<div class="timeline-item"><div class="timeline-dot"></div>';
+                if (time) timelineHtml += '<div class="timeline-date">' + time + '</div>';
+                timelineHtml += '<div class="timeline-content">' + content + '</div></div>';
             }
-        }, 100);
+            timelineHtml += '</div>';
+            resultDiv.innerHTML = '<div class="tracking-number">🔍 运单号：' + trackingNumber + '</div>' + timelineHtml;
+        } else {
+            resultDiv.innerHTML = '<div class="error-message">❌ 未找到运单号 ' + trackingNumber + ' 的信息</div>';
+        }
     }
 
-    文档.getElementById('trackingInput').addEventListener('keypress', 函数(e) {
-        如果 (e.键 === '回车') 搜索跟踪();
+    document.getElementById('trackingInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') doSearch();
     });
-</脚本>
-</身体>
-  </html>
+</script>
+</body>
+</html>
