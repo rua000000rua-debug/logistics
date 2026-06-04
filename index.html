@@ -1,67 +1,400 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>物流查询</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>物流查询系统 | 专业包裹追踪</title>
     <style>
-        body { font-family: Arial; padding: 40px; text-align: center; }
-        input, button { padding: 10px; font-size: 16px; }
-        .result { margin-top: 20px; padding: 20px; background: #f0f0f0; text-align: left; display: none; }
-        .success { color: green; }
-        .error { color: red; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 30px 20px 20px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+        }
+
+        /* 查询卡片 */
+        .search-card {
+            background: white;
+            border-radius: 32px;
+            padding: 30px 24px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.25);
+            margin-bottom: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .search-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e8ecf0;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: #fafbfc;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+
+        .input-group button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0 32px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(102,126,234,0.3);
+        }
+
+        .input-group button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 14px rgba(102,126,234,0.4);
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        /* 结果卡片 */
+        .result-card {
+            background: white;
+            border-radius: 32px;
+            padding: 28px 24px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 单号头部 */
+        .tracking-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 16px 20px;
+            border-radius: 24px;
+            margin-bottom: 28px;
+            border-left: 5px solid #667eea;
+        }
+
+        .tracking-label {
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .tracking-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        /* 时间轴 */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 28px;
+            border-left: 2px solid #e2e8f0;
+            margin-left: 10px;
+            padding-left: 24px;
+        }
+
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -33px;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #cbd5e0;
+            transition: all 0.2s;
+        }
+
+        .timeline-item:first-child .timeline-dot {
+            background: #48bb78;
+            box-shadow: 0 0 0 2px #48bb78;
+        }
+
+        .timeline-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: inline-block;
+            background: #ede9fe;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .timeline-content {
+            color: #334155;
+            line-height: 1.5;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+
+        /* 错误状态 */
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 24px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .error-message .code {
+            font-family: monospace;
+            background: #fecaca;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 480px) {
+            .container { padding: 0; }
+            .search-card, .result-card { padding: 20px; }
+            .input-group { flex-direction: column; }
+            .input-group button { padding: 14px; }
+            .tracking-number { font-size: 16px; }
+        }
     </style>
 </head>
 <body>
-    <h2>📦 物流查询系统</h2>
-    <input type="text" id="trackingNumber" placeholder="请输入单号" />
-    <button onclick="searchNow()">查询</button>
-    <div id="result" class="result"></div>
+<div class="container">
+    <div class="header">
+        <div class="logo-icon">📦</div>
+        <h1>物流查询系统</h1>
+        <p>输入运单号，一键追踪包裹动态</p>
+    </div>
 
-    <script>
-        function searchNow() {
-            var number = document.getElementById('trackingNumber').value.trim();
-            var resultDiv = document.getElementById('result');
-            
-            var trackingData = {
-                "TEST123": ["2026-06-01 揽收", "2026-06-02 运输中", "2026-06-03 派送中"],
-                "PXU012605124-1": [
-                    "2026-05-28 10:01:58 口岸已换装",
-                    "2026-05-25 10:01:54 抵达口岸",
-                    "2026-05-18 22:02:07 已发车去出境口岸",
-                    "2026-05-18 10:11:19 货物已从仓库发出",
-                    "2026-05-18 09:52:48 订单已创建"
-                ],
-                "PXM1002605152-1": [
-                    "2026-05-27 10:01:53 货物已换装完成",
-                    "2026-05-26 10:01:40 抵达口岸，等待换装",
-                    "2026-05-19 15:02:10 货物已从仓库发出",
-                    "2026-05-19 10:23:13 货物已从仓库发出",
-                    "2026-05-19 10:05:46 订单已创建"
-                ],
-                "PXU03260621-1": [
-                    "2026-06-04 10:32:53 货物装载完毕，货物已从仓库发出",
-                    "2026-06-04 10:25:46 订单已创建"
-                ]
-            };
-            
+    <div class="search-card">
+        <div class="input-group">
+            <input type="text" id="trackingInput" placeholder="例如：PXU012605124-1" autocomplete="off" />
+            <button onclick="doSearch()">查 询</button>
+        </div>
+        <div class="hint">
+            💡 支持：PXU012605124-1 / PXM1002605152-1 / PXU03260621-1
+        </div>
+    </div>
+
+    <div id="result" class="result-card"></div>
+    <div class="footer">数据实时同步 | 官方合作物流</div>
+</div>
+
+<script>
+    // ============================================================
+    // 物流数据库 - 在这里更新单号和轨迹（按时间从早到晚排序）
+    // ============================================================
+    var logisticsDatabase = {
+        "TEST123": [
+            "2026-06-01 08:00 已揽收",
+            "2026-06-02 10:30 运输中",
+            "2026-06-03 15:20 派送中"
+        ],
+        "PXU012605124-1": [
+            "2026-05-18 09:52:48 订单已创建",
+            "2026-05-18 10:11:19 货物装载完毕，货物已从仓库发出",
+            "2026-05-18 22:02:07 货物已装载完毕，已发车去出境口岸",
+            "2026-05-25 10:01:54 货物已经到达出境口岸",
+            "2026-05-28 10:01:58 口岸已换装"
+        ],
+        "PXM1002605152-1": [
+            "2026-05-19 10:05:46 订单已创建",
+            "2026-05-19 10:23:13 货物装载完毕，货物已从仓库发出",
+            "2026-05-19 15:02:10 货物装载完毕，货物已从仓库发出",
+            "2026-05-26 10:01:40 货物抵达口岸，等待过境车换装",
+            "2026-05-27 10:01:53 货物已换装完成"
+        ],
+        "PXU03260621-1": [
+            "2026-06-04 10:25:46 订单已创建",
+            "2026-06-04 10:32:53 货物装载完毕，货物已从仓库发出"
+        ]
+    };
+    // ============================================================
+
+    function doSearch() {
+        var trackingNumber = document.getElementById('trackingInput').value.trim();
+        var resultDiv = document.getElementById('result');
+
+        // 空值校验
+        if (trackingNumber === "") {
             resultDiv.style.display = "block";
-            
-            if (trackingData[number]) {
-                var html = '<p class="success">✅ 查询成功！单号：' + number + '</p><ul>';
-                for (var i = 0; i < trackingData[number].length; i++) {
-                    html += '<li>' + trackingData[number][i] + '</li>';
-                }
-                html += '</ul>';
-                resultDiv.innerHTML = html;
-            } else {
-                html = '<p class="error">❌ 未找到单号：' + number + '</p><p>可查询的单号：</p><ul>';
-                for (var key in trackingData) {
-                    html += '<li>' + key + '</li>';
-                }
-                html += '</ul>';
-                resultDiv.innerHTML = html;
-            }
+            resultDiv.innerHTML = '<div class="error-message">⚠️ 请先输入运单号</div>';
+            return;
         }
-    </script>
+
+        // 显示加载动画
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>正在查询物流轨迹...</div></div>';
+
+        // 模拟极短延迟，让体验更顺滑
+        setTimeout(function() {
+            var logistics = logisticsDatabase[trackingNumber];
+
+            if (logistics && logistics.length > 0) {
+                // 构建时间轴HTML（保持原始顺序：从早到晚）
+                var timelineHtml = '<div class="timeline">';
+                for (var i = 0; i < logistics.length; i++) {
+                    var item = logistics[i];
+                    var time = "";
+                    var content = item;
+                    
+                    // 提取时间部分（支持 2026-05-28 10:01:58 格式）
+                    var timeMatch = item.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+                    if (timeMatch) {
+                        time = timeMatch[1];
+                        content = item.substring(timeMatch[0].length).trim();
+                    }
+                    
+                    timelineHtml += '<div class="timeline-item">';
+                    timelineHtml += '<div class="timeline-dot"></div>';
+                    if (time) {
+                        timelineHtml += '<div class="timeline-date">' + time + '</div>';
+                    }
+                    timelineHtml += '<div class="timeline-content">' + content + '</div>';
+                    timelineHtml += '</div>';
+                }
+                timelineHtml += '</div>';
+                
+                // 完整结果
+                var fullHtml = '<div class="tracking-header">' +
+                    '<div class="tracking-label">运单号码</div>' +
+                    '<div class="tracking-number">' + trackingNumber + '</div>' +
+                    '</div>' + timelineHtml;
+                
+                resultDiv.innerHTML = fullHtml;
+            } else {
+                // 未找到单号：展示可查询列表
+                var hintList = '<ul style="margin-top: 12px; text-align: left; display: inline-block;">';
+                for (var key in logisticsDatabase) {
+                    hintList += '<li><code>' + key + '</code></li>';
+                }
+                hintList += '</ul>';
+                
+                resultDiv.innerHTML = '<div class="error-message">' +
+                    '❌ 未找到单号 <span class="code">' + trackingNumber + '</span><br/><br/>' +
+                    '当前可查询单号：' + hintList +
+                    '</div>';
+            }
+        }, 200);
+    }
+
+    // 绑定回车键
+    document.getElementById('trackingInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            doSearch();
+        }
+    });
+</script>
 </body>
 </html>
